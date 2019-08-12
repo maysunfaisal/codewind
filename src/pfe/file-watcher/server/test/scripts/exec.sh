@@ -48,13 +48,13 @@ function setup {
     fi
     
     # Clone projects to workspace
-    declare -a PROJECT_URLS
+    declare -A PROJECT_URLS
     PROJECT_URLS["codewindtestpython"]="https://github.com/microclimate-dev2ops/SVTPythonTemplate"
     PROJECT_URLS["codewindtestgo"]="https://github.com/microclimate-dev2ops/microclimateGoTemplate"
     PROJECT_URLS["codewindtestlagom"]="https://github.com/microclimate-dev2ops/lagomJavaTemplate"
     PROJECT_URLS["codewindtestspring"]="https://github.com/microclimate-dev2ops/springJavaTemplate"
     PROJECT_URLS["codewindtestmicroprofile"]="https://github.com/microclimate-dev2ops/javaMicroProfileTemplate"
-    PROJECT_URLS["codewindtestnodejs"]="https://github.com/microclimate-dev2ops/nodeExpressTemplate.git"
+    PROJECT_URLS["codewindtestnodejs"]="https://github.com/microclimate-dev2ops/nodeExpressTemplate"
     PROJECT_URLS["codewindtestswift"]="https://github.com/microclimate-dev2ops/swiftTemplate"
     
     echo -e "${BLUE}Cloning projects to $CW_DIR/codewind-workspace ${RESET}\n"
