@@ -57,7 +57,7 @@ export default class ProjectTest {
                 expect(info.statusCode);
                 expect(info.statusCode).to.equal(200);
                 expect(info.types);
-                expect(info.types).to.deep.equal([]);
+                expect(info.types).to.deep.equal(["docker"]);
             });
         });
     }
