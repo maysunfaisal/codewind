@@ -257,12 +257,18 @@ export function projectExtensionsTestModule(): void {
 
             if (!(await existsAsync(extensionsPath))) {
                 await mkdirAsync(extensionsPath);
-                if (!await existsAsync(appsodyExtensionPath)) {
-                    await mkdirAsync(appsodyExtensionPath);
-                    await writeAsync(appsodyExtensionTestArtifactPath1, '{"container": {"prefix": "testprefix-", "suffix": "-testsuffix"}}');
-                    await writeAsync(appsodyExtensionTestArtifactPath2, "echo $(pwd)");
-                }
             }
+            expect(fs.statSync(extensionsPath)).to.exist;
+
+            if (!await existsAsync(appsodyExtensionPath)) {
+                await mkdirAsync(appsodyExtensionPath);
+            }
+            expect(fs.statSync(appsodyExtensionPath)).to.exist;
+
+            await writeAsync(appsodyExtensionTestArtifactPath1, '{"container": {"prefix": "testprefix-", "suffix": "-testsuffix"}}');
+            await writeAsync(appsodyExtensionTestArtifactPath2, "echo $(pwd)");
+            expect(fs.statSync(appsodyExtensionTestArtifactPath1)).to.exist;
+            expect(fs.statSync(appsodyExtensionTestArtifactPath2)).to.exist;
         });
 
         after("remove test directories", async () => {
