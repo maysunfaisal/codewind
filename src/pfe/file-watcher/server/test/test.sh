@@ -46,7 +46,7 @@ function runWithSetup {
     fi
 
     # Set up test automation
-    ./scripts/setup.sh -t $TEST_TYPE -b $TEST_BRANCH -f install
+    ./scripts/setup.sh -t $TEST_TYPE -f install
     if [[ $? -eq 0 ]]; then
         echo -e "${GREEN}Test automation setup was successful. ${RESET}\n"
     else
