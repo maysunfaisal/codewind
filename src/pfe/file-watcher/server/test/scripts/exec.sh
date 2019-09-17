@@ -52,7 +52,8 @@ function setup {
     TURBINE_SERVER_DIR=$CW_DIR/src/pfe/file-watcher/server
     TEST_DIR=$TURBINE_SERVER_DIR/test
     TURBINE_DIR_CONTAINER=/file-watcher
-    TEST_OUTPUT_DIR=~/test_results/$TEST_TYPE/$TEST_SUITE/$DATE_NOW/$TIME_NOW
+    WEBSERVER_HOST_DIR=~/test_results/$DATE_NOW
+    TEST_OUTPUT_DIR=$WEBSERVER_HOST_DIR/$TIME_NOW/$TEST_TYPE/$TEST_SUITE
     TEST_OUTPUT=$TEST_OUTPUT_DIR/test_output.xml
     PROJECTS_CLONE_DATA_FILE="./resources/projects-clone-data"
     TEST_LOG=$TEST_OUTPUT_DIR/$TEST_TYPE-$TEST_SUITE-test.log
@@ -61,77 +62,98 @@ function setup {
 
     mkdir -p $TEST_OUTPUT_DIR
 
-    if [ $TEST_TYPE == "local" ]; then
-        CODEWIND_CONTAINER_ID=$(docker ps | grep codewind-pfe-amd64 | cut -d " " -f 1)
-        docker cp $TURBINE_SERVER_DIR $CODEWIND_CONTAINER_ID:$TURBINE_DIR_CONTAINER \
-        && docker exec -i $CODEWIND_CONTAINER_ID bash -c "$TURBINE_NPM_INSTALL_CMD"
-    elif [ $TEST_TYPE == "kube" ]; then
-        CODEWIND_POD_ID=$(kubectl get po --selector=app=codewind-pfe --show-labels | tail -n 1 | cut -d " " -f 1)
-        kubectl cp $TURBINE_SERVER_DIR $CODEWIND_POD_ID:$TURBINE_DIR_CONTAINER \
-        && kubectl exec -i $CODEWIND_POD_ID -- bash -c "$TURBINE_NPM_INSTALL_CMD"
-    fi
-
-    if [[ ($? -ne 0) ]]; then
-        echo -e "${RED}Test setup failed. ${RESET}\n"
-        exit 1
-    fi
-
-    # Clean up workspace if needed
-    if [[ ($CLEAN_WORKSPACE == "y") ]]; then
+    if [ $TEST_SUITE == "functional" ]; then
         if [ $TEST_TYPE == "local" ]; then
-            echo -e "${BLUE}Cleaning up workspace. ${RESET}\n"
-            rm -rf $CW_DIR/codewind-workspace/*
+            CODEWIND_CONTAINER_ID=$(docker ps | grep codewind-pfe-amd64 | cut -d " " -f 1)
+            docker cp $TURBINE_SERVER_DIR $CODEWIND_CONTAINER_ID:$TURBINE_DIR_CONTAINER \
+            && docker exec -i $CODEWIND_CONTAINER_ID bash -c "$TURBINE_NPM_INSTALL_CMD"
+        elif [ $TEST_TYPE == "kube" ]; then
+            CODEWIND_POD_ID=$(kubectl get po --selector=app=codewind-pfe --show-labels | tail -n 1 | cut -d " " -f 1)
+            kubectl cp $TURBINE_SERVER_DIR $CODEWIND_POD_ID:$TURBINE_DIR_CONTAINER \
+            && kubectl exec -i $CODEWIND_POD_ID -- bash -c "$TURBINE_NPM_INSTALL_CMD"
         fi
-    fi
-
-    if [ $TEST_TYPE == "local" ]; then
-        PROJECT_PATH="$CW_DIR/codewind-workspace"
-    elif [ $TEST_TYPE == "kube" ]; then
-        PROJECT_PATH=/projects
-    fi
-
-    CTR=0
-    # Read project git config
-    echo -e "${BLUE}Cloning projects to $PROJECT_PATH. ${RESET}"
-    while IFS='\n' read -r LINE; do
-        PROJECT_CLONE[$CTR]=$LINE
-        let CTR++
-    done < "$PROJECTS_CLONE_DATA_FILE"
-    
-    # Clone projects to workspace
-    for i in "${PROJECT_CLONE[@]}"; do
-        PROJECT_NAME=$(echo $i | cut -d "=" -f 1)
-        PROJECT_URL=$(echo $i | cut -d "=" -f 2)
-        echo -e "\n\nProject name is: $PROJECT_NAME, project URL is $PROJECT_URL"
-        echo -e "${BLUE}Cloning $PROJECT_URL. ${RESET}"
-        clone $PROJECT_NAME $PROJECT_PATH $PROJECT_URL
 
         if [[ ($? -ne 0) ]]; then
-            echo -e "${RED}Cloning project $PROJECT_NAME failed. ${RESET}\n"
+            echo -e "${RED}Test setup failed. ${RESET}\n"
             exit 1
         fi
-    done
+
+        # Clean up workspace if needed
+        if [[ ($CLEAN_WORKSPACE == "y") ]]; then
+            if [ $TEST_TYPE == "local" ]; then
+                echo -e "${BLUE}Cleaning up workspace. ${RESET}\n"
+                rm -rf $CW_DIR/codewind-workspace/*
+            fi
+        fi
+
+        if [ $TEST_TYPE == "local" ]; then
+            PROJECT_PATH="$CW_DIR/codewind-workspace"
+        elif [ $TEST_TYPE == "kube" ]; then
+            PROJECT_PATH=/projects
+        fi
+
+        CTR=0
+        # Read project git config
+        echo -e "${BLUE}Cloning projects to $PROJECT_PATH. ${RESET}"
+        while IFS='\n' read -r LINE; do
+            PROJECT_CLONE[$CTR]=$LINE
+            let CTR++
+        done < "$PROJECTS_CLONE_DATA_FILE"
+        
+        # Clone projects to workspace
+        for i in "${PROJECT_CLONE[@]}"; do
+            PROJECT_NAME=$(echo $i | cut -d "=" -f 1)
+            PROJECT_URL=$(echo $i | cut -d "=" -f 2)
+            echo -e "\n\nProject name is: $PROJECT_NAME, project URL is $PROJECT_URL"
+            echo -e "${BLUE}Cloning $PROJECT_URL. ${RESET}"
+            clone $PROJECT_NAME $PROJECT_PATH $PROJECT_URL
+
+            if [[ ($? -ne 0) ]]; then
+                echo -e "${RED}Cloning project $PROJECT_NAME failed. ${RESET}\n"
+                exit 1
+            fi
+        done
+    elif [ $TEST_SUITE == "unit" ]; then
+        echo -e "${BLUE}Installing node modules...${RESET}"
+        cd $TURBINE_SERVER_DIR
+        npm install
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}Failed to install node modules.${RESET}"
+            exit 1
+        else
+            echo -e "${GREEN}Installed the npm modules.${RESET}"
+        fi
+        cd -
+    fi
 }
 
 function run {
-    if [ $TEST_TYPE == "local" ]; then
-        docker exec -i $CODEWIND_CONTAINER_ID bash -c "$TURBINE_EXEC_TEST_CMD" | tee $TEST_LOG
-        docker cp $CODEWIND_CONTAINER_ID:/test_output.xml $TEST_OUTPUT
-    elif [ $TEST_TYPE == "kube" ]; then
-        kubectl exec -i $CODEWIND_POD_ID -- bash -c "$TURBINE_EXEC_TEST_CMD" | tee $TEST_LOG
-        kubectl cp $CODEWIND_POD_ID:/test_output.xml $TEST_OUTPUT
+    if [ $TEST_SUITE == "functional" ]; then
+        if [ $TEST_TYPE == "local" ]; then
+            docker exec -i $CODEWIND_CONTAINER_ID bash -c "$TURBINE_EXEC_TEST_CMD" | tee $TEST_LOG
+            docker cp $CODEWIND_CONTAINER_ID:/test_output.xml $TEST_OUTPUT
+        elif [ $TEST_TYPE == "kube" ]; then
+            kubectl exec -i $CODEWIND_POD_ID -- bash -c "$TURBINE_EXEC_TEST_CMD" | tee $TEST_LOG
+            kubectl cp $CODEWIND_POD_ID:/test_output.xml $TEST_OUTPUT
+        fi
+    elif [ $TEST_SUITE == "unit" ]; then
+        cd $TURBINE_SERVER_DIR
+        echo -e "${BLUE}Running $TEST_SUITE test...${RESET}"
+        JUNIT_REPORT_PATH=$TEST_OUTPUT npm run $TEST_SUITE:test:xml | tee $TEST_LOG
+        cd -
     fi
-    echo -e "${BLUE}Test logs available at: $TEST_LOG ${RESET}"
 
-    # Cronjob machines need to set up CRONJOB_RUN=y to push test restuls to dashboard
+    echo -e "${BLUE}Test logs available at: $TEST_LOG ${RESET}"
+    echo -e "${BLUE}CRONJOB_RUN: $CRONJOB_RUN ${RESET}"
+    # Cronjob machines need to set up CRONJOB_RUN=y to push test results to dashboard
     if [[ (-n $CRONJOB_RUN) ]]; then
         echo -e "${BLUE}Upload test results to the test dashboard. ${RESET}\n"
         if [[ (-z $DASHBOARD_IP) ]]; then
             echo -e "${RED}Dashboard IP is required to upload test results. ${RESET}\n"
             exit 1
         fi
-        $WEBSERVER_FILE $TEST_OUTPUT_DIR > /dev/null
-        curl --header "Content-Type:text/xml" --data-binary @$TEST_OUTPUT --insecure "https://$DASHBOARD_IP/postxmlresult/$BUCKET_NAME/test" > /dev/null
+        $WEBSERVER_FILE $WEBSERVER_HOST_DIR > /dev/null
+        # curl --header "Content-Type:text/xml" --data-binary @$TEST_OUTPUT --insecure "https://$DASHBOARD_IP/postxmlresult/$BUCKET_NAME/test" > /dev/null
     fi
 }
 
@@ -177,11 +199,18 @@ if [[ (-z $TEST_TYPE) || (-z $TEST_SUITE) || (-z $CLEAN_WORKSPACE) ]]; then
     usage
     exit 1
 fi
+if [ $TEST_SUITE == "functional" ]; then
+    # Setup test cases run
+    echo -e "${BLUE}Starting pre-test setup. ${RESET}\n"
+    setup
 
-# Setup test cases run
-echo -e "${BLUE}Starting pre-test setup. ${RESET}\n"
-setup
+    # Run test cases
+    echo -e "${BLUE}\nRunning $TEST_SUITE tests. ${RESET}\n"
+    run
+elif [ $TEST_SUITE == "unit" ]; then
+    # Run test cases
+    echo -e "${BLUE}\nRunning $TEST_SUITE tests. ${RESET}\n"
+    run
+fi
 
-# Run test cases
-echo -e "${BLUE}\nRunning $TEST_SUITE tests. ${RESET}\n"
-run
+

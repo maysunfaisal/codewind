@@ -168,19 +168,16 @@ if [[ $TEST_TYPE == "kube" ]]; then
     if [[ (-z $NAMESPACE) ]]; then
         echo -e "${RED}Mandatory argument NAMESPACE is not set up. ${RESET}\n"
         echo -e "${RED}Please export variable NAMESPACE to run the Kube tests. ${RESET}\n"
-        exit 1
     fi
 
     if [[ (-z $CLUSTER_IP) ]]; then
         echo -e "${RED}Mandatory argument CLUSTER_IP is not set up. ${RESET}\n"
         echo -e "${RED}Please export variable CLUSTER_IP to run the Kube tests. ${RESET}\n"
-        exit 1
     fi
 
     if [[ (-z $CLUSTER_USER) ]]; then
         echo -e "${RED}Mandatory argument CLUSTER_USER is not set up. ${RESET}\n"
         echo -e "${RED}Please export variable CLUSTER_USER to run the Kube tests. ${RESET}\n"
-        exit 1
     fi
 
     if [[ (-z $CLUSTER_PASSWORD) ]]; then
