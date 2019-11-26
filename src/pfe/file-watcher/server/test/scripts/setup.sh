@@ -6,6 +6,8 @@ RED='\033[0;31m'
 BLUE='\033[0;36m'
 RESET='\033[0m'
 
+source ./scripts/utils.sh
+
 # Set up variables
 cd ../../../../../
 CW_DIR=$(pwd)
@@ -35,6 +37,9 @@ function install {
             exit 1
         fi
     elif [ $TEST_TYPE == "kube" ]; then
+        # Generate the Che Access Token for Che User Authentication
+        generateCheAccessToken
+
         # Create Codewind workspace with Che API
         echo -e "${BLUE}Creating Che Codewind Workspace ${RESET}\n"
         DEFAULT_DEVFILE="https://raw.githubusercontent.com/eclipse/codewind-che-plugin/master/devfiles/latest/devfile.yaml"
@@ -44,8 +49,7 @@ function install {
         fi
         echo -e "${BLUE}Downloading devfile from:${GREEN} $DEFAULT_DEVFILE ${RESET}\n"
         
-        echo -e "Che access token set to $CHE_ACCESS_TOKEN"
-        HTTPSTATUS=$(curl $DEFAULT_DEVFILE | curl -s --header "Content-Type: text/yaml" --header 'Authorization: Bearer '"$CHE_ACCESS_TOKEN"'' --request POST --data-binary @- -D- -o/dev/null http://che-$NAMESPACE.$CLUSTER_IP.nip.io/api/workspace/devfile?start-after-create=true 2>/dev/null | sed -n 3p | cut -d ' ' -f2) 
+        HTTPSTATUS=$(curl $DEFAULT_DEVFILE | curl -s --header "Content-Type: text/yaml" --header 'Authorization: Bearer '"$CHE_ACCESS_TOKEN"'' --request POST --data-binary @- -D- -o/dev/null http://che-$NAMESPACE.$CLUSTER_IP/api/workspace/devfile?start-after-create=true 2>/dev/null | sed -n 3p | cut -d ' ' -f2) 
         if [[ $HTTPSTATUS -ne 201 ]]; then
             echo -e "${RED}Codewind workspace setup has failed. ${RESET}\n"
             exit 1
@@ -80,6 +84,9 @@ function uninstall {
             exit 1
         fi
     elif [ $TEST_TYPE == "kube" ]; then
+        # Generate the Che Access Token for Che User Authentication
+        generateCheAccessToken
+
         # Get the Codewind Workspace ID
         CW_POD="$( kubectl get po --selector=app=codewind-pfe --show-labels | tail -n 1 )"
         echo -e "${BLUE}Codewind Pod: $CW_POD ${RESET}\n"
@@ -91,7 +98,7 @@ function uninstall {
 
             # Stop the Codewind Workspace
             echo -e "${BLUE}Stopping the Codewind Workspace ${RESET}\n"
-            HTTPSTATUS=$(curl -I --header 'Authorization: Bearer '"$CHE_ACCESS_TOKEN"'' --request DELETE http://che-$NAMESPACE.$CLUSTER_IP.nip.io/api/workspace/$WORKSPACE_ID/runtime 2>/dev/null | head -n 1| cut -d$' ' -f2)
+            HTTPSTATUS=$(curl -I --header 'Authorization: Bearer '"$CHE_ACCESS_TOKEN"'' --request DELETE http://che-$NAMESPACE.$CLUSTER_IP/api/workspace/$WORKSPACE_ID/runtime 2>/dev/null | head -n 1| cut -d$' ' -f2)
             if [[ $HTTPSTATUS -ne 204 ]]; then
                 echo -e "${RED}Codewind workspace has failed to stop. Will attempt to remove the workspace... ${RESET}\n"
             fi
@@ -101,7 +108,7 @@ function uninstall {
 
             # Remove the Codewind Workspace
             echo -e "${BLUE}Removing the Codewind Workspace ${RESET}\n"
-            HTTPSTATUS=$(curl -I --header 'Authorization: Bearer '"$CHE_ACCESS_TOKEN"'' --request DELETE http://che-$NAMESPACE.$CLUSTER_IP.nip.io/api/workspace/$WORKSPACE_ID 2>/dev/null | head -n 1| cut -d$' ' -f2)
+            HTTPSTATUS=$(curl -I --header 'Authorization: Bearer '"$CHE_ACCESS_TOKEN"'' --request DELETE http://che-$NAMESPACE.$CLUSTER_IP/api/workspace/$WORKSPACE_ID 2>/dev/null | head -n 1| cut -d$' ' -f2)
             if [[ $HTTPSTATUS -ne 204 ]]; then
                 echo -e "${RED}Codewind workspace has failed to be removed... ${RESET}\n"
                 exit 1
