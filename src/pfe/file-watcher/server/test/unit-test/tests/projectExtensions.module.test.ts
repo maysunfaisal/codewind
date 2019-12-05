@@ -53,7 +53,7 @@ export function projectExtensionsTestModule(): void {
     const appsodyExtensionTestArtifactPath1 = path.join(appsodyExtensionPath, ".sh-extension");
     const appsodyExtensionTestArtifactPath2 = path.join(appsodyExtensionPath, "entrypoint.sh");
 
-    it("setProjectExtensionList: " + someRandomExtension + " & isProjectExtensionSupported: " + someRandomExtension, async () => {
+    /* it("setProjectExtensionList: " + someRandomExtension + " & isProjectExtensionSupported: " + someRandomExtension, async () => {
         projectExtensions.setProjectExtensionList(someRandomExtension);
         const isExtensionSupported = projectExtensions.isProjectExtensionSupported(someRandomExtension);
         expect(isExtensionSupported).to.equal(true);
@@ -204,7 +204,7 @@ export function projectExtensionsTestModule(): void {
                 }
             });
         }
-    });
+    }); */
 
     describe("Combinational testing of getProjectHandler function", () => {
 
@@ -275,6 +275,7 @@ export function projectExtensionsTestModule(): void {
             expect(fs.statSync(appsodyExtensionTestArtifactPath2)).to.exist;
         });
 
+<<<<<<< Updated upstream
         after("remove test directories", async () => {
             if ((await existsAsync(nodeProjectMetadataPath))) {
                 await unlinkAsync(nodeTestProjectMetadata);
@@ -312,9 +313,46 @@ export function projectExtensionsTestModule(): void {
                 await rmdirAsync(extensionsPath);
             }
         });
+=======
+        // after("remove test directories", async () => {
+        //     if ((await existsAsync(nodeProjectMetadataPath))) {
+        //         await unlinkAsync(nodeTestProjectMetadata);
+        //         await rmdirAsync(nodeProjectMetadataPath);
+        //     }
+
+        //     if ((await existsAsync(springProjectMetadataPath))) {
+        //         await unlinkAsync(springTestProjectMetadata);
+        //         await rmdirAsync(springProjectMetadataPath);
+        //     }
+
+        //     if ((await existsAsync(swiftProjectMetadataPath))) {
+        //         await unlinkAsync(swiftTestProjectMetadata);
+        //         await rmdirAsync(swiftProjectMetadataPath);
+        //     }
+
+        //     if ((await existsAsync(microprofileProjectMetadataPath))) {
+        //         await unlinkAsync(microprofileTestProjectMetadata);
+        //         await rmdirAsync(microprofileProjectMetadataPath);
+        //     }
+
+        //     if ((await existsAsync(appsodyNodeProjectMetadataPath))) {
+        //         await unlinkAsync(appsodyNodeTestProjectMetadata);
+        //         await rmdirAsync(appsodyNodeProjectMetadataPath);
+        //     }
+
+        //     if ((await existsAsync(extensionsPath))) {
+        //         if (await existsAsync(appsodyExtensionPath)) {
+        //             await unlinkAsync(appsodyExtensionTestArtifactPath1);
+        //             await unlinkAsync(appsodyExtensionTestArtifactPath2);
+        //             await rmdirAsync(appsodyExtensionPath);
+        //         }
+        //         await rmdirAsync(extensionsPath);
+        //     }
+        // });
+>>>>>>> Stashed changes
 
         const combinations: any = {
-            "combo1": {
+            /* "combo1": {
                 "projectID": "dummynodeproject",
                 "resultProjectHandler": "nodejs",
                 "resultProjectCapabilities": {
@@ -353,7 +391,7 @@ export function projectExtensionsTestModule(): void {
                     startModes: ["run", "debug"],
                     controlCommands: ["restart"]
                 }
-            },
+            }, */
             "combo6": {
                 "projectID": "dummyappsodyproject",
                 "resultProjectHandler": "appsodyExtension",
@@ -379,6 +417,7 @@ export function projectExtensionsTestModule(): void {
                 if (projectInfo.extensionID) {
                     projectInfo.extensionID = appsodyExtensionPath;
                 }
+                console.log("TEST " + JSON.stringify(projectInfo));
                 const projectHandler: any = await projectExtensions.getProjectHandler(projectInfo);
                 if (projectInfo.projectType) {
                     expect(projectHandler).to.exist;
@@ -393,7 +432,7 @@ export function projectExtensionsTestModule(): void {
         }
     });
 
-    describe("testing of removeProjectHandler function", () => {
+   /*  describe("testing of removeProjectHandler function", () => {
 
         const projectID: string = "dummyappsodyproject";
 
@@ -441,5 +480,5 @@ export function projectExtensionsTestModule(): void {
             expect(projectHandler).to.exist;
             expect(projectHandler.supportedType).to.equal("appsodyExtension");
         });
-    });
+    }); */
 }

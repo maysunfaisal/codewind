@@ -82,14 +82,14 @@ const loggerModule: ModuleExtension = {
     moduleFunc: loggerTestModule
 };
 
-export const moduleLists: Array<ModuleExtension> = [logHelperModule,
+export const moduleLists: Array<ModuleExtension> = [/* logHelperModule,
                                                     utilsModule,
                                                     localeModule,
                                                     workspaceSettingsModule,
                                                     projectSettingsModule,
                                                     projectStatusControllerModule,
                                                     projectControllerModule,
-                                                    actionsModule,
+                                                    actionsModule, */
                                                     projectExtensionsModule,
-                                                    projectUtilModule,
-                                                    loggerModule];
+                                                    /* projectUtilModule,
+                                                    loggerModule */];

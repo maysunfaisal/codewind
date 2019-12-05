@@ -91,14 +91,8 @@ function cleanRun {
         exit 1
     fi
 
-    # Run test cases
-    ./scripts/exec.sh -t $TEST_TYPE -s $TEST_SUITE -d $CLEAN_WORKSPACE
-    if [[ $? -eq 0 ]]; then
-        echo -e "${GREEN}\nFinished running tests. ${RESET}\n"
-    else
-        echo -e "${RED}\nThe test run has failed. ${RESET}\n"
-        exit 1
-    fi
+    # Execute the tests
+    executeTests
 
     # Post-test cleanup
     # Cronjob machines need to set up POST_CLEANUP=y to do post-test automation cleanup
@@ -110,6 +104,17 @@ function cleanRun {
             echo -e "${RED}Post-test cleanup failed. ${RESET}\n"
             exit 1
         fi
+    fi
+}
+
+function executeTests {
+    # Run test cases
+    ./scripts/exec.sh -t $TEST_TYPE -s $TEST_SUITE -d $CLEAN_WORKSPACE
+    if [[ $? -eq 0 ]]; then
+        echo -e "${GREEN}\nFinished running tests. ${RESET}\n"
+    else
+        echo -e "${RED}\nThe test run has failed. ${RESET}\n"
+        exit 1
     fi
 }
 
@@ -215,9 +220,12 @@ if [[ $TEST_TYPE == "kube" ]]; then
         exit 1
     fi
 fi
-
-if [[ ($CLEAN_RUN == "y") ]]; then
-    cleanRun
-else
-    run
+if [ $TEST_SUITE == "functional" ]; then
+    if [[ ($CLEAN_RUN == "y") ]]; then
+        cleanRun
+    else
+        run
+    fi
+elif [ $TEST_SUITE == "unit" ]; then
+    executeTests
 fi

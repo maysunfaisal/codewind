@@ -109,6 +109,38 @@ function setup {
         PROJECT_PATH="/codewind-workspace"
     elif [ $TEST_TYPE == "kube" ]; then
         PROJECT_PATH=/projects
+        CTR=0
+        # Read project git config
+        echo -e "${BLUE}Cloning projects to $PROJECT_PATH. ${RESET}"
+        while IFS='\n' read -r LINE; do
+            PROJECT_CLONE[$CTR]=$LINE
+            let CTR++
+        done < "$PROJECTS_CLONE_DATA_FILE"
+        
+        # Clone projects to workspace
+        for i in "${PROJECT_CLONE[@]}"; do
+            PROJECT_NAME=$(echo $i | cut -d "=" -f 1)
+            PROJECT_URL=$(echo $i | cut -d "=" -f 2)
+            echo -e "\n\nProject name is: $PROJECT_NAME, project URL is $PROJECT_URL"
+            echo -e "${BLUE}Cloning $PROJECT_URL. ${RESET}"
+            clone $PROJECT_NAME $PROJECT_PATH $PROJECT_URL
+
+            if [[ ($? -ne 0) ]]; then
+                echo -e "${RED}Cloning project $PROJECT_NAME failed. ${RESET}\n"
+                exit 1
+            fi
+        done
+    elif [ $TEST_SUITE == "unit" ]; then
+        echo -e "${BLUE}Installing node modules...${RESET}"
+        cd $TURBINE_SERVER_DIR
+        npm install
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}Failed to install node modules.${RESET}"
+            exit 1
+        else
+            echo -e "${GREEN}Installed the node modules.${RESET}"
+        fi
+        cd -
     fi
 
     downloadCwctl
