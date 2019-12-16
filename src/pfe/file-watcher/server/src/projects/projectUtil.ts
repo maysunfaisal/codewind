@@ -1764,8 +1764,11 @@ export async function isApplicationPodUp(buildInfo: BuildRequest, projectName: s
         logger.logProjectError(translatedmsg, buildInfo.projectID, buildInfo.containerName);
         await projectStatusController.updateProjectStatus(STATE_TYPES.appState, buildInfo.projectID, AppState.stopped, "buildscripts.podFailedToStart", undefined, undefined, translatedmsg);
         await kubeutil.printHelmStatus(buildInfo.projectID, buildInfo.containerName);
-        await kubeutil.deleteHelmRelease(buildInfo.projectID, buildInfo.containerName);
+        // await kubeutil.deleteHelmRelease(buildInfo.projectID, buildInfo.containerName);
         // Clear the isApplicationPodUp function interval
+        logger.logProjectInfo("Maysun: Pod is not up and running", buildInfo.projectID);
+        await processManager.spawnDetachedAsync(buildInfo.projectID, "kubectl", ["describe", "deploy",  "--selector=projectID=" + buildInfo.projectID], {});
+        await processManager.spawnDetachedAsync(buildInfo.projectID, "kubectl", ["describe", "po",  "--selector=projectID=" + buildInfo.projectID], {});
         logger.logProjectInfo("Clearing the isApplicationPodUp interval", buildInfo.projectID);
         clearInterval(intervalID);
         isApplicationPodUpIntervalMap.delete(buildInfo.projectID);

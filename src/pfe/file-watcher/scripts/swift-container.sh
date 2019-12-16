@@ -205,7 +205,10 @@ function deployK8s() {
 			# Print the Helm status before deleting the release
 			helm status $project
 
-			helm delete $project
+			# helm delete $project
+			echo "Maysun: Pod is not up and running"
+			kubectl describe deploy --selector=projectID=$PROJECT_ID
+			kubectl describe po --selector=projectID=$PROJECT_ID
 
 			$util updateAppState $PROJECT_ID $APP_STATE_STOPPED "$errorMsg"
 			exit 3

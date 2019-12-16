@@ -162,7 +162,11 @@ while [ $POD_RUNNING -eq 0 ]; do
 		# Print the Helm status before deleting the release
 		helm status $RELEASE_NAME
 
-		helm delete $RELEASE_NAME
+		# helm delete $RELEASE_NAME
+		echo "Maysun: Pod is not up and running"
+		kubectl describe deploy --selector=projectID=$PROJECT_ID
+		kubectl describe po --selector=projectID=$PROJECT_ID
+
 		exit 1;
 	fi
 	sleep 1;
