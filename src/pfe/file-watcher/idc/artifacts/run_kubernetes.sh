@@ -166,6 +166,7 @@ while [ $POD_RUNNING -eq 0 ]; do
 		echo "Maysun: Pod is not up and running"
 		kubectl describe deploy --selector=projectID=$PROJECT_ID
 		kubectl describe po --selector=projectID=$PROJECT_ID
+		kubectl get po --show-labels
 
 		exit 1;
 	fi

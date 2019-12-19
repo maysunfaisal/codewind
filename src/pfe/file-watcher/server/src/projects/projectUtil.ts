@@ -1769,6 +1769,7 @@ export async function isApplicationPodUp(buildInfo: BuildRequest, projectName: s
         logger.logProjectInfo("Maysun: Pod is not up and running", buildInfo.projectID);
         await processManager.spawnDetachedAsync(buildInfo.projectID, "kubectl", ["describe", "deploy",  "--selector=projectID=" + buildInfo.projectID], {});
         await processManager.spawnDetachedAsync(buildInfo.projectID, "kubectl", ["describe", "po",  "--selector=projectID=" + buildInfo.projectID], {});
+        await processManager.spawnDetachedAsync(buildInfo.projectID, "kubectl", ["get", "po",  "--show-labels"], {});
         logger.logProjectInfo("Clearing the isApplicationPodUp interval", buildInfo.projectID);
         clearInterval(intervalID);
         isApplicationPodUpIntervalMap.delete(buildInfo.projectID);
