@@ -53,8 +53,8 @@ export const projectTypes: any = {
     [codewindTemplates.default]: [
         projectLanguges.liberty,
         projectLanguges.nodejs,
-        // projectLanguges.spring,
-        // projectLanguges.swift
+        projectLanguges.spring,
+        projectLanguges.swift
     ],
     // [codewindTemplates.docker]: [
     //     projectLanguges.go,
