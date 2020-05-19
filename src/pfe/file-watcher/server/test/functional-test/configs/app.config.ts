@@ -53,19 +53,19 @@ export const projectTypes: any = {
     [codewindTemplates.default]: [
         projectLanguges.liberty,
         projectLanguges.nodejs,
-        projectLanguges.spring,
-        projectLanguges.swift
+        // projectLanguges.spring,
+        // projectLanguges.swift
     ],
-    [codewindTemplates.docker]: [
-        projectLanguges.go,
-        projectLanguges.lagom,
-        projectLanguges.python
-    ],
-    [codewindTemplates.odo]: process.env.IN_K8 ? [
-        projectLanguges.nodejs,
-        projectLanguges.perl,
-        projectLanguges.python
-    ] : []
+    // [codewindTemplates.docker]: [
+    //     projectLanguges.go,
+    //     projectLanguges.lagom,
+    //     projectLanguges.python
+    // ],
+    // [codewindTemplates.odo]: process.env.IN_K8 ? [
+    //     projectLanguges.nodejs,
+    //     projectLanguges.perl,
+    //     projectLanguges.python
+    // ] : []
 };
 
 export const templateNames: any = {
