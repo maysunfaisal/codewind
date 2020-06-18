@@ -249,6 +249,7 @@ export const build = async function (args: IProjectActionParams): Promise<{ oper
                     handler: projectHandler
                 };
                 // for update operation
+                logger.logProjectInfo(">>> MJF action build adding project to build queue project.operation:" + JSON.stringify(project.operation), args.projectID);
                 await projectsController.addProjectToBuildQueue(project);
                 statusController.buildRequired(args.projectID, false);
                 // delete cache from the map, since a build is triggerred
@@ -259,9 +260,10 @@ export const build = async function (args: IProjectActionParams): Promise<{ oper
                 // changedFilesLock release
             }, {});
         }, 500);
-
+        logger.logProjectInfo(">>> MJF action build done with build and chunks?", args.projectID);
         return { "operationId": operation.operationId };
     } else {
+        logger.logProjectInfo(">>> MJF action build cant add to queue", args.projectID);
         throw new Error("A build is already in progress");
     }
 };

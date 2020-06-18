@@ -651,6 +651,7 @@ function pingInTransitApplications(): void {
  * @returns boolean
  */
 export function isBuildInProgressOrQueued(projectID: string): boolean {
+    logger.logProjectInfo(">>> MJF projectStatusController isBuildInProgressOrQueued buildStateMap.has(projectID) " + buildStateMap.has(projectID) + " buildStateMap.get(projectID).state" + buildStateMap.get(projectID).state, projectID);
     if (buildStateMap.has(projectID) && (buildStateMap.get(projectID).state == BuildState.inProgress || buildStateMap.get(projectID).state == BuildState.queued))
         return true;
     else

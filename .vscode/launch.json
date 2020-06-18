@@ -11,11 +11,11 @@
             "program": "${workspaceFolder}/test/node_modules/mocha/bin/_mocha",
             "args": [
                 "--timeout",
-                "999999", // timeout length. Required since while debugging we may pause for longer than Mocha's test timeout
+                "999999",
                 "--colors",
                 "${workspaceFolder}/test/src/",
                 "--recursive",
-                "--exit",
+                "--exit"
             ],
             "internalConsoleOptions": "openOnSessionStart",
             "cwd": "${workspaceFolder}/test"
@@ -29,7 +29,7 @@
                 "--colors",
                 "--timeout",
                 "999999",
-                "${file}",
+                "${file}"
             ],
             "internalConsoleOptions": "openOnSessionStart",
             "cwd": "${workspaceRoot}"
@@ -43,5 +43,12 @@
             "localRoot": "${workspaceFolder}/src/pfe/portal",
             "remoteRoot": "/portal"
         },
+        {
+            "type": "java",
+            "name": "Debug testmaysun1",
+            "request": "attach",
+            "hostName": "127.0.0.1",
+            "projectName": "testmaysun1"
+        }
     ]
 }

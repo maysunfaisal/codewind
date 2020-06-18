@@ -443,9 +443,9 @@ export async function addProjectToBuildQueue(project: BuildQueueType): Promise<v
         // Check if project is already in the build queue, if it is then no need to add it
         if (buildQueue.has(project)) {
             target = project;
-            logger.logProjectInfo("The project is already in the build queue so it won't be added again", project.operation.projectInfo.projectID);
+            logger.logProjectInfo(">>> MJF The project is already in the build queue so it won't be added again", project.operation.projectInfo.projectID);
         } else {
-            logger.logProjectInfo("Pushing project to build queue", project.operation.projectInfo.projectID);
+            logger.logProjectInfo(">>> MJF Pushing project to build queue", project.operation.projectInfo.projectID);
             buildQueue.add(project);
         }
         done();
@@ -473,29 +473,34 @@ async function checkBuildQueue(): Promise<void> {
         // if we have builds in the queue
         buildQueueLength = buildQueue.size;
         if (buildQueueLength > 0) {
-            logger.logDebug("Found at least one build in the queue");
+            logger.logInfo(">>> MJF checkBuildQueue Found at least one build in the queue buildQueue.size " + buildQueue.size);
 
             // check und update builds in progress
             checkInProgressBuilds();
 
             // if we have space for builds to trigger, trigger the build, remove it from the queue, increase the number of builds in progress and push it on to in progress array
             if (runningBuilds.size < MAX_BUILDS) {
-                logger.logDebug("Space available to trigger the next build");
+                logger.logInfo(">>> MJF checkBuildQueue Space available to trigger the next build runningBuilds.size : " + runningBuilds.size);
 
                 // only push to running build queue if the running build queue doesn't already have the same project building
                 const nextBuildInQueue = buildQueue.values().next().value;
 
-                if (!runningBuilds.has(nextBuildInQueue)) {
-                    logger.logDebug("All builds in the running queue are unique. Adding next build to the queue.");
+                logger.logInfo(">>> MJF checkBuildQueue Metadata for runningBuilds: " + JSON.stringify(runningBuilds));
+                logger.logInfo(">>> MJF checkBuildQueue Metadata for nextBuildInQueue: " + JSON.stringify(nextBuildInQueue));
 
-                    logger.logDebug("Metadata for next build: " + JSON.stringify(nextBuildInQueue));
+                if (!runningBuilds.has(nextBuildInQueue)) {
+                    logger.logInfo(">>> MJF checkBuildQueue All builds in the running queue are unique. Adding next build to the queue.");
+
+                    logger.logInfo(">>> MJF checkBuildQueue Metadata for next build: " + JSON.stringify(nextBuildInQueue));
 
                     buildQueue.delete(nextBuildInQueue);
                     runningBuilds.add(nextBuildInQueue);
 
+                    logger.logInfo(">>> MJF checkBuildQueue deleting from buildqueue and adding to runningbuilds and triggering build for: " + JSON.stringify(nextBuildInQueue));
+
                     triggerBuild(nextBuildInQueue, changedFilesMap.get(nextBuildInQueue.operation.projectInfo.projectID));
                 } else {
-                    logger.logDebug("Next build to be triggered already exists in the running queue. Skip adding it and move it to the end of the build queue.");
+                    logger.logInfo(">>> MJF checkBuildQueue Next build to be triggered already exists in the running queue. Skip adding it and move it to the end of the build queue.");
                     // we move the first element in the build queue to the last
                     // this is done because: e.g if we have 3 builds in the running = [p1,p2,p3] and 3 builds in the waiting queue = [p3,p4,p5]. Now the next build on the queue is p3, however, p3 is the running build queue - so we will skip adding it to the running build queue.
                     // If e.g p2 finishes before p3, build running queue becomes = [p1, p3]. Now we have a space in the running queue but we can't utilize that spot because the first project in the build queue is p3.
@@ -510,10 +515,12 @@ async function checkBuildQueue(): Promise<void> {
         // buildQueueLock,  runningBuildsLock release
         // emit updated queued project ranks
         if (buildQueueLength > 0) {
+            logger.logInfo(">>> MJF checkBuildQueue calling emit project ranks");
             await emitProjectRanks();
         } else {
             // check und update builds in progress
             // we do this check because we need to clear runningBuilds when there are no projects in the buildQueue
+            logger.logInfo(">>> MJF checkBuildQueue checking in progress builds");
             checkInProgressBuilds();
         }
     }, {});
@@ -536,7 +543,7 @@ async function triggerBuild(project: BuildQueueType, changedFiles?: IFileChangeE
     const operation = project.operation;
     const operationType = operation.type;
 
-    logger.logProjectInfo(`Beginning build for ${projectID} for operation type: ${operationType}`, projectID);
+    logger.logProjectInfo(`>>> MJF triggerBuild Beginning build for ${projectID} for operation type: ${operationType}`, projectID);
 
     if (operationType.toLowerCase() === "create") {
         // we need to check for the required files for the corresponding project handler
@@ -574,8 +581,13 @@ async function triggerBuild(project: BuildQueueType, changedFiles?: IFileChangeE
         logger.logProjectInfo(`Handing ${operationType} operation to the selected project handler`, projectID);
         selectedProjectHandler.update(operation, changedFiles);
     } else {
+        logger.logProjectInfo(`>>> MJF triggerBuild No build for ${projectID} for operation type: ${operationType}`, projectID);
+
         return;
     }
+
+    logger.logProjectInfo(`>>> MJF triggerBuild done build for ${projectID} for operation type: ${operationType}`, projectID);
+
 }
 
 /**
@@ -590,21 +602,23 @@ function checkInProgressBuilds(): void {
         runningBuilds.forEach((project: BuildQueueType) => {
             const projectID = project.operation.projectInfo.projectID;
             const buildStatus = statusController.getBuildState(projectID);
+            logger.logProjectInfo(">>> MJF checkInProgressBuilds buildStatus: " + buildStatus + " project.handler.buildByExtension" + project.handler.buildByExtension, projectID);
             if (project.handler.buildByExtension ||
                 buildStatus === statusController.BuildState.success || buildStatus === statusController.BuildState.failed) {
-                logger.logProjectInfo("Build completed for " + projectID, projectID);
+                logger.logProjectInfo(">>> MJF checkInProgressBuilds Build completed for " + projectID + " deleting from running build", projectID);
                 runningBuilds.delete(project);
             }
         });
 
         if (runningBuilds.size > 0) {
+            logger.logInfo(">>> MJF checkInProgressBuilds running build size runningBuilds.size: " + runningBuilds.size);
             // Only log the runningBuilds details if there is a project building to avoid spamming the logs
             const currentBuilds: Array<String> = [];
             runningBuilds.forEach((project: BuildQueueType) => {
                 currentBuilds.push(project.operation.projectInfo.projectID);
             });
-            logger.logDebug(`Running Builds queue: ${JSON.stringify(currentBuilds)}`);
-            logger.logDebug(`Builds in progress: ${runningBuilds.size}`);
+            logger.logInfo(`>>> MJF checkInProgressBuilds Running Builds queue: ${JSON.stringify(currentBuilds)}`);
+            logger.logInfo(`>>> MJF checkInProgressBuilds Builds in progress: ${runningBuilds.size}`);
         }
         done();
     }, () => {
@@ -619,14 +633,14 @@ function checkInProgressBuilds(): void {
  * @returns Promise<void>
  */
 async function emitProjectRanks(): Promise<void> {
-    logger.logTrace("Emitting project ranks");
+    logger.logInfo(">>> MJF Emitting project ranks");
     await lock.acquire("buildQueueLock", async done => {
         const buildQueueIterator = buildQueue.values();
         const buildQueueSize = buildQueue.size;
         for (let rank = 1; rank <= buildQueueSize; rank++) {
             const project: BuildQueueType = buildQueueIterator.next().value;
             const rankStr = `${rank}/${buildQueueSize}`;
-            logger.logProjectTrace("Setting rank for projectID " + project.operation.projectInfo.projectID + ": " + rankStr, project.operation.projectInfo.projectID);
+            logger.logProjectInfo(">>> MJF Setting rank for projectID " + project.operation.projectInfo.projectID + ": " + rankStr, project.operation.projectInfo.projectID);
             await statusController.updateProjectStatus(statusController.STATE_TYPES.buildState, project.operation.projectInfo.projectID, statusController.BuildState.queued, BUILD_KEY, undefined, undefined, await localeTrans.getTranslation(BUILD_KEY, { rank: rankStr.toString() }));
         }
         done();
